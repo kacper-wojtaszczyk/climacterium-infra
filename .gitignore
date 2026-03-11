@@ -1,0 +1,21 @@
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+terraform/.terraform/
+*.tfvars
+*.tfvars.json
+*.tfplan
+
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# JetBrains / GoLand
+/.idea/
+
+.claude/CLAUDE.local.md
