@@ -30,10 +30,14 @@ resource "scaleway_k8s_pool" "jobs" {
   cluster_id  = scaleway_k8s_cluster.main.id
   name        = "jobs"
   node_type   = "BASIC2-A2C-4G"
-  size        = 0
+  size        = 1       # Scaleway requires >= 1 at creation; autoscaler handles scale-to-zero after
   min_size    = 0
   max_size    = 2
   autoscaling = true
   autohealing = true
-  tags = ["taint=workload=batch:NoSchedule"]
+  tags        = ["taint=workload=batch:NoSchedule"]
+
+  lifecycle {
+    ignore_changes = [size]
+  }
 }
