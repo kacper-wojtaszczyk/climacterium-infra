@@ -14,7 +14,7 @@ Terraform (this repo)
   │   └── jobs pool (0-2× BASIC2-A2C-4G, scale-to-zero)
   ├── Managed PostgreSQL (DB-DEV-S)
   ├── Object Storage (jackfruit-raw bucket)
-  ├── Container Registry (buttprint namespace)
+  ├── Container Registry (climacterium namespace)
   └── Load Balancer + DNS (buttprint.eu)
 
 K8s manifests (this repo)
@@ -54,7 +54,7 @@ scw k8s cluster list                  # List Kapsule clusters
 scw rdb instance list                 # List managed databases
 
 # Container Registry
-docker login rg.nl-ams.scw.cloud/buttprint -u nologin --password-stdin <<< "$SCW_SECRET_KEY"
+docker login rg.nl-ams.scw.cloud/climacterium -u nologin --password-stdin <<< "$SCW_SECRET_KEY"
 ```
 
 ## Directory Structure
@@ -90,14 +90,14 @@ docs/
 ### Cluster topology
 
 - **Kapsule** with mutualized (free) control plane, Cilium CNI
-- **Services pool:** 1× BASIC2-A2C-4G (ARM64, 2 vCPU, 4GB), always-on (`min=max=1`)
+- **Services pool:** 1-2× BASIC2-A2C-4G (ARM64, 2 vCPU, 4GB), always-on (`min=1, max=2`)
 - **Jobs pool:** 0-2× BASIC2-A2C-4G, scale-to-zero, tainted `workload=batch:NoSchedule`
 - ARM64 throughout — see [ADR 001](../docs/adr/001-arm64-node-instance-type.md)
 
 ### Managed services (same VPC, not in cluster)
 
 - **PostgreSQL:** DB-DEV-S (~€8/mo), Private Network endpoint, dual-purpose (Dagster metadata + Jackfruit catalog)
-- **Container Registry:** `buttprint` namespace, free up to 75GB. Endpoint: `rg.nl-ams.scw.cloud/buttprint/<image>:<tag>`
+- **Container Registry:** `climacterium` namespace, free up to 75GB. Endpoint: `rg.nl-ams.scw.cloud/climacterium/<image>:<tag>`
 - **Object Storage:** `jackfruit-raw` bucket, S3-compatible API
 
 ### Networking
@@ -126,7 +126,7 @@ docs/
 - **File organization:** One file per resource type — `networking.tf`, `cluster.tf`, `database.tf`, `storage.tf`, `registry.tf`, `dns.tf`, `outputs.tf`
 - **Sensitive outputs:** Mark all connection strings, credentials, and kubeconfig as `sensitive = true`
 - **Variable defaults:** Region (`nl-ams`) and zone (`nl-ams-1`) have defaults. `project_id` has no default (must be provided via `terraform.tfvars`)
-- **Naming pattern:** All Scaleway resources prefixed with `buttprint-` (e.g. `buttprint-cluster`, `buttprint-db`, `buttprint-registry`)
+- **Naming pattern:** All Scaleway resources prefixed with `climacterium-` (e.g. `climacterium-cluster`, `climacterium-db`, `climacterium-registry`)
 - **State is sacred:** Never delete `terraform.tfstate` manually. Never run `terraform destroy` without explicit intent
 
 ## Kubernetes Conventions
@@ -137,4 +137,4 @@ docs/
 - **Secrets for credentials:** Never hardcode credentials in Deployment manifests. Use k8s Secrets (referenced via `envFrom` or `env[].valueFrom.secretKeyRef`)
 - **StatefulSet for ClickHouse:** Not Deployment — PVC lifecycle is tied to the StatefulSet. Deleting a StatefulSet does not delete its PVCs
 - **Taint/toleration for batch:** Jobs pool is tainted `workload=batch:NoSchedule`. Only pods with matching toleration land there (Dagster ETL jobs)
-- **Image references:** `rg.nl-ams.scw.cloud/buttprint/<service>:<tag>` — always use the full registry path
+- **Image references:** `rg.nl-ams.scw.cloud/climacterium/<service>:<tag>` — always use the full registry path
