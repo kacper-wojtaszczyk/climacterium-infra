@@ -126,7 +126,6 @@ docs/
 - **File organization:** One file per resource type — `networking.tf`, `cluster.tf`, `database.tf`, `storage.tf`, `registry.tf`, `dns.tf`, `outputs.tf`
 - **Sensitive outputs:** Mark all connection strings, credentials, and kubeconfig as `sensitive = true`
 - **Variable defaults:** Region (`nl-ams`) and zone (`nl-ams-1`) have defaults. `project_id` has no default (must be provided via `terraform.tfvars`)
-- **Naming pattern:** All Scaleway resources prefixed with `climacterium-` (e.g. `climacterium-cluster`, `climacterium-db`, `climacterium-registry`)
 - **State is sacred:** Never delete `terraform.tfstate` manually. Never run `terraform destroy` without explicit intent
 
 ## Kubernetes Conventions
