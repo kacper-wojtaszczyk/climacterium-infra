@@ -16,7 +16,7 @@ resource "scaleway_rdb_instance" "postgres" {
 
 resource "scaleway_rdb_user" "admin" {
   instance_id = scaleway_rdb_instance.postgres.id
-  name        = "rdbuser"
+  name        = "jackfruit-admin"
   password    = var.postgres_password
   is_admin    = true
   region      = var.region

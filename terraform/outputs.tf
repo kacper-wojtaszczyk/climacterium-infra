@@ -9,6 +9,11 @@ output "kubeconfig" {
   sensitive   = true
 }
 
+output "registry_endpoint" {
+  description = "Container Registry endpoint for image tagging"
+  value       = scaleway_registry_namespace.main.endpoint
+}
+
 output "postgres_host" {
   description = "PostgreSQL private network host IP"
   value       = scaleway_rdb_instance.postgres.private_network[0].ip

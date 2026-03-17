@@ -17,7 +17,7 @@ resource "scaleway_iam_policy" "pipeline_s3" {
   application_id = scaleway_iam_application.pipeline.id
 
   rule {
-    permission_set_names = ["ObjectStorageFullAccess"]
+    permission_set_names = ["ObjectStorageReadOnly", "ObjectStorageObjectsWrite"]
     project_ids          = [var.project_id]
   }
 }
