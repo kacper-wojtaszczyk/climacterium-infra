@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jackfruit-api
+  labels:
+    app: jackfruit-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jackfruit-api
+  template:
+    metadata:
+      labels:
+        app: jackfruit-api
+    spec:
+      containers:
+        - name: jackfruit-api
+          image: rg.nl-ams.scw.cloud/climacterium/jackfruit-api:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+          env:
+            - name: CLICKHOUSE_HOST
+              value: "clickhouse.default.svc.cluster.local"
+            - name: CLICKHOUSE_NATIVE_PORT
+              value: "9000"
+            - name: CLICKHOUSE_DATABASE
+              value: "default"
+            - name: PORT
+              value: "8080"
