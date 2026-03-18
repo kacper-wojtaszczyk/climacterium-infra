@@ -76,6 +76,12 @@ output "s3_endpoint" {
   value       = "https://s3.${var.region}.scw.cloud"
 }
 
+output "ads_api_key" {
+  description = "Copernicus ADS API key"
+  value       = var.ads_api_key
+  sensitive   = true
+}
+
 output "lb_id" {
   value       = scaleway_lb.main.id
   description = "Zoned ID of the Load Balancer (needed for K8s CCM annotation)"

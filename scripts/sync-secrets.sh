@@ -54,4 +54,13 @@ kubectl create secret generic clickhouse-credentials \
   --save-config \
   --dry-run=client -o yaml | kubectl apply -f -
 
+# External API keys
+ADS_API_KEY=$(terraform output -raw ads_api_key)
+
+echo "→ Syncing external-api-keys..."
+kubectl create secret generic external-api-keys \
+  --from-literal=ads-api-key="$ADS_API_KEY" \
+  --save-config \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 echo "Done. All secrets synced."
