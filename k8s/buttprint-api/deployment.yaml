@@ -32,12 +32,14 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /health
               port: 8080
             initialDelaySeconds: 3
             periodSeconds: 5
+            failureThreshold: 3
           env:
             - name: JACKFRUIT_URL
               value: "http://jackfruit-api.default.svc.cluster.local:8080"
