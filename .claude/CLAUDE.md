@@ -73,13 +73,15 @@ terraform/
 └── terraform.tfvars      ← Variable values (gitignored)
 
 k8s/
-├── clickhouse/           ← StatefulSet + Service + PVC + ConfigMap
-├── jackfruit-api/        ← Deployment + Service (ClusterIP)
-├── buttprint-api/        ← Deployment + Service + Ingress
-├── buttprint-fe/         ← Deployment + Service + Ingress
-├── dagster/              ← Daemon + Webserver + ServiceAccount + RBAC
-├── ingress/              ← nginx Ingress controller + LB config
-└── secrets/              ← Secret templates (values not committed)
+├── ingress.yaml              ← Ingress resource (host-based routing)
+├── ingress-nginx-values.yaml ← Helm values for nginx Ingress controller (CCM annotations)
+├── placeholder/              ← Temporary placeholder (Task 05, replaced in Task 07)
+├── clickhouse/               ← StatefulSet + Service + PVC + ConfigMap
+├── jackfruit-api/            ← Deployment + Service (ClusterIP)
+├── buttprint-api/            ← Deployment + Service + Ingress
+├── buttprint-fe/             ← Deployment + Service + Ingress
+├── dagster/                  ← Daemon + Webserver + ServiceAccount + RBAC
+└── secrets/                  ← Secret templates (values not committed)
 
 docs/
 └── adr/                  ← Architecture Decision Records
@@ -106,7 +108,8 @@ docs/
 - Pod-to-pod via cluster DNS (e.g. `jackfruit-api.default.svc.cluster.local:8080`)
 - Pod-to-Postgres via Private Network endpoint (never public internet)
 - One Scaleway Load Balancer (~€8/mo) + nginx Ingress controller (not per-service LBs)
-- TLS: Scaleway managed TLS at the LB (auto Let's Encrypt)
+- TLS: Let's Encrypt via ACME provider (DNS-01 challenge) → `scaleway_lb_certificate` (custom cert uploaded to LB). Cert renewal requires periodic `terraform apply`. Not auto-renewing — the ACME provider handles renewal when `min_days_remaining` threshold is reached during apply
+- LB protocol: HTTP forwarding (`scw-loadbalancer-protocol-http: "*"`), not PROXY protocol. Real client IPs via X-Forwarded-For headers (`use-forwarded-headers: "true"` in nginx config)
 - DNS: `buttprint.eu` registered at Scaleway, managed via Terraform
 
 ## Key Design Decisions
@@ -115,7 +118,7 @@ docs/
 - **Single LB with Ingress:** One shared Load Balancer + nginx Ingress routes to multiple services by host/path — not per-service LBs
 - **Local Terraform state:** `terraform.tfstate` stored locally for now. Migration to Scaleway Object Storage backend planned but not urgent
 - **Private Network for DB/S3:** PostgreSQL endpoint on Private Network only. Object Storage accessed via S3 API (Scaleway-internal from pods)
-- **Managed TLS at LB:** Let's Encrypt via Scaleway LB, not cert-manager in-cluster
+- **TLS at LB via ACME provider:** Let's Encrypt cert obtained via `vancluever/acme` provider (DNS-01 challenge through Scaleway DNS), uploaded to LB as `custom_certificate`. Not cert-manager in-cluster, not Scaleway's native `letsencrypt` block (which conflicts with CCM's port 80 frontend)
 - **ClickHouse as StatefulSet:** Not a Deployment — needs persistent storage (PVC) and stable network identity. `ReplacingMergeTree` engine
 - **Dockerfiles live in service repos:** This repo contains only infrastructure. `jackfruit/`, `buttprint-api/`, `buttprint-fe/` each own their Dockerfile
 
@@ -123,7 +126,8 @@ docs/
 
 - **Provider:** `scaleway/scaleway ~> 2.0` — check [Scaleway provider docs](https://registry.terraform.io/providers/scaleway/scaleway/latest/docs) before writing HCL (breaking changes between versions)
 - **Terraform version:** `>= 1.5`
-- **File organization:** One file per resource type — `networking.tf`, `cluster.tf`, `database.tf`, `storage.tf`, `registry.tf`, `dns.tf`, `outputs.tf`
+- **Providers:** `scaleway/scaleway ~> 2.0` + `vancluever/acme ~> 2.0` (for TLS cert via DNS-01)
+- **File organization:** One file per resource type — `networking.tf`, `cluster.tf`, `database.tf`, `storage.tf`, `registry.tf`, `dns.tf`, `lb.tf`, `outputs.tf`
 - **Sensitive outputs:** Mark all connection strings, credentials, and kubeconfig as `sensitive = true`
 - **Variable defaults:** Region (`nl-ams`) and zone (`nl-ams-1`) have defaults. `project_id` has no default (must be provided via `terraform.tfvars`)
 - **State is sacred:** Never delete `terraform.tfstate` manually. Never run `terraform destroy` without explicit intent
