@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buttprint-api
+  labels:
+    app: buttprint-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buttprint-api
+  template:
+    metadata:
+      labels:
+        app: buttprint-api
+    spec:
+      containers:
+        - name: buttprint-api
+          image: rg.nl-ams.scw.cloud/climacterium/buttprint-api:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+          env:
+            - name: JACKFRUIT_URL
+              value: "http://jackfruit-api.default.svc.cluster.local:8080"
+            - name: PORT
+              value: "8080"

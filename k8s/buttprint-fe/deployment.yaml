@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buttprint-fe
+  labels:
+    app: buttprint-fe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buttprint-fe
+  template:
+    metadata:
+      labels:
+        app: buttprint-fe
+    spec:
+      containers:
+        - name: buttprint-fe
+          image: rg.nl-ams.scw.cloud/climacterium/buttprint-fe:latest
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "3000"
+            - name: ORIGIN
+              value: "https://buttprint.eu"
+            - name: PUBLIC_API_URL
+              value: "https://api.buttprint.eu"
