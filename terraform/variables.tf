@@ -21,6 +21,12 @@ variable "postgres_password" {
   sensitive   = true
 }
 
+variable "clickhouse_password" {
+  type        = string
+  description = "Password for the ClickHouse default user (self-hosted in K8s)"
+  sensitive   = true
+}
+
 variable "scw_secret_key" {
   type        = string
   description = "Scaleway secret key — passed to ACME provider for DNS-01 challenge via Scaleway DNS"

@@ -36,6 +36,24 @@ output "postgres_connection_string" {
   sensitive = true
 }
 
+output "postgres_user" {
+  description = "PostgreSQL admin user name"
+  value       = scaleway_rdb_user.admin.name
+  sensitive   = true
+}
+
+output "postgres_password" {
+  description = "PostgreSQL admin password"
+  value       = var.postgres_password
+  sensitive   = true
+}
+
+output "clickhouse_password" {
+  description = "ClickHouse default user password"
+  value       = var.clickhouse_password
+  sensitive   = true
+}
+
 output "s3_access_key" {
   description = "S3 access key ID for jackfruit-raw bucket"
   value       = scaleway_iam_api_key.pipeline.access_key
