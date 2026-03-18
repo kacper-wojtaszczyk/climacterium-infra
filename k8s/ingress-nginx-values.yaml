@@ -1,0 +1,11 @@
+controller:
+  service:
+    annotations:
+      service.beta.kubernetes.io/scw-loadbalancer-id: "nl-ams-1/e5b02632-2758-4052-b335-c54b3d48e6f8"
+      service.beta.kubernetes.io/scw-loadbalancer-use-hostname: "true"
+      service.beta.kubernetes.io/scw-loadbalancer-protocol-http: "*"
+      service.beta.kubernetes.io/scw-loadbalancer-certificate-ids: "443:nl-ams-1/b3b60791-4fd5-42e2-818e-1c31c3e11350"
+    targetPorts:
+      https: http
+  config:
+    use-forwarded-headers: "true"

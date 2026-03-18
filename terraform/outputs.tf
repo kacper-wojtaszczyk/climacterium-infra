@@ -57,3 +57,18 @@ output "s3_endpoint" {
   description = "S3-compatible endpoint URL"
   value       = "https://s3.${var.region}.scw.cloud"
 }
+
+output "lb_id" {
+  value       = scaleway_lb.main.id
+  description = "Zoned ID of the Load Balancer (needed for K8s CCM annotation)"
+}
+
+output "lb_ip" {
+  value       = scaleway_lb_ip.main.ip_address
+  description = "Public IPv4 of the Load Balancer"
+}
+
+output "lb_certificate_id" {
+  value       = scaleway_lb_certificate.buttprint.id
+  description = "Zoned ID of the TLS certificate (needed for K8s CCM annotation)"
+}
