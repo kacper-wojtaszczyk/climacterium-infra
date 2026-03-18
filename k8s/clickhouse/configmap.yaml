@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-init
+data:
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS jackfruit;
+
+    CREATE TABLE IF NOT EXISTS jackfruit.grid_data
+    (
+        variable     LowCardinality(String),
+        timestamp    DateTime,
+        lat          Float32,
+        lon          Float32,
+        value        Float32,
+        unit         LowCardinality(String),
+        catalog_id   UUID,
+        inserted_at  DateTime64(3) DEFAULT now64(3)
+    )
+    ENGINE = ReplacingMergeTree(inserted_at)
+    PARTITION BY toYYYYMMDD(timestamp)
+    ORDER BY (variable, timestamp, lat, lon);

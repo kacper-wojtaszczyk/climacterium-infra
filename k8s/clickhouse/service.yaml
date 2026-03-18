@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse
+spec:
+  clusterIP: None
+  selector:
+    app: clickhouse
+  ports:
+    - port: 8123
+      name: http
+      targetPort: 8123
+    - port: 9000
+      name: native
+      targetPort: 9000
