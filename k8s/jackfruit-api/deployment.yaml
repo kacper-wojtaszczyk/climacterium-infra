@@ -41,11 +41,55 @@ spec:
             periodSeconds: 5
             failureThreshold: 3
           env:
-            - name: CLICKHOUSE_HOST
-              value: "clickhouse.default.svc.cluster.local"
-            - name: CLICKHOUSE_NATIVE_PORT
-              value: "9000"
-            - name: CLICKHOUSE_DATABASE
-              value: "default"
             - name: PORT
               value: "8080"
+            - name: CLICKHOUSE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: host
+            - name: CLICKHOUSE_NATIVE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: port
+            - name: CLICKHOUSE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: user
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: password
+            - name: CLICKHOUSE_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: database
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
