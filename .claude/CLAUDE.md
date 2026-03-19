@@ -10,8 +10,7 @@ Terraform + Kubernetes manifests for the all-Scaleway deployment of the [Buttpri
 Terraform (this repo)
   ├── VPC / Private Network
   ├── Kapsule cluster
-  │   ├── services pool (1× BASIC2-A2C-4G, always-on)
-  │   └── jobs pool (0-2× BASIC2-A2C-4G, scale-to-zero)
+  │   └── services pool (1-3× BASIC2-A2C-8G, autoscaling)
   ├── Managed PostgreSQL (DB-DEV-S)
   ├── Object Storage (jackfruit-raw bucket)
   ├── Container Registry (climacterium namespace)
@@ -92,8 +91,7 @@ docs/
 ### Cluster topology
 
 - **Kapsule** with mutualized (free) control plane, Cilium CNI
-- **Services pool:** 1-2× BASIC2-A2C-4G (ARM64, 2 vCPU, 4GB), always-on (`min=1, max=2`)
-- **Jobs pool:** 0-2× BASIC2-A2C-4G, scale-to-zero, tainted `workload=batch:NoSchedule`
+- **Single pool:** 1-3× BASIC2-A2C-8G (ARM64, 2 vCPU, 4GB), autoscaling (`min=1, max=3`). Runs all services and batch jobs — see [ADR 002](docs/adr/002-single-node-pool.md)
 - ARM64 throughout — see [ADR 001](../docs/adr/001-arm64-node-instance-type.md)
 
 ### Managed services (same VPC, not in cluster)
@@ -114,7 +112,8 @@ docs/
 
 ## Key Design Decisions
 
-- **ARM64 nodes (ADR 001):** BASIC2-A2C-4G for both pools — sustainability (better perf/watt), architecture alignment (Apple Silicon dev → ARM64 CI → ARM64 prod), production SLA, cheaper than PLAY2-NANO
+- **ARM64 nodes (ADR 001):** BASIC2-A2C-8G — sustainability (better perf/watt), architecture alignment (Apple Silicon dev → ARM64 CI → ARM64 prod), production SLA, cheaper than PLAY2-NANO
+- **Single pool (ADR 002):** All workloads (services + batch jobs) share one autoscaling pool. No taints or node affinity — the autoscaler adds capacity when batch jobs need it
 - **Single LB with Ingress:** One shared Load Balancer + nginx Ingress routes to multiple services by host/path — not per-service LBs
 - **Local Terraform state:** `terraform.tfstate` stored locally for now. Migration to Scaleway Object Storage backend planned but not urgent
 - **Private Network for DB/S3:** PostgreSQL endpoint on Private Network only. Object Storage accessed via S3 API (Scaleway-internal from pods)
@@ -139,5 +138,4 @@ docs/
 - **Health checks:** Liveness + readiness probes on all long-running pods
 - **Secrets for credentials:** Never hardcode credentials in Deployment manifests. Use k8s Secrets (referenced via `envFrom` or `env[].valueFrom.secretKeyRef`)
 - **StatefulSet for ClickHouse:** Not Deployment — PVC lifecycle is tied to the StatefulSet. Deleting a StatefulSet does not delete its PVCs
-- **Taint/toleration for batch:** Jobs pool is tainted `workload=batch:NoSchedule`. Only pods with matching toleration land there (Dagster ETL jobs)
 - **Image references:** `rg.nl-ams.scw.cloud/climacterium/<service>:<tag>` — always use the full registry path

@@ -18,26 +18,10 @@ resource "scaleway_k8s_cluster" "main" {
 resource "scaleway_k8s_pool" "services" {
   cluster_id  = scaleway_k8s_cluster.main.id
   name        = "services"
-  node_type   = "BASIC2-A2C-4G"
+  node_type   = "BASIC2-A2C-8G"
   size        = 1
   min_size    = 1
-  max_size    = 2
+  max_size    = 3       # Headroom for autoscaler to add a node for batch jobs (see ADR 002)
   autoscaling = true
   autohealing = true
-}
-
-resource "scaleway_k8s_pool" "jobs" {
-  cluster_id  = scaleway_k8s_cluster.main.id
-  name        = "jobs"
-  node_type   = "BASIC2-A2C-4G"
-  size        = 1       # Scaleway requires >= 1 at creation; autoscaler handles scale-to-zero after
-  min_size    = 0
-  max_size    = 2
-  autoscaling = true
-  autohealing = true
-  tags        = ["taint=workload=batch:NoSchedule"]
-
-  lifecycle {
-    ignore_changes = [size]
-  }
 }

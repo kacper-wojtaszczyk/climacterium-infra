@@ -64,4 +64,14 @@ kubectl create secret generic external-api-keys \
   --save-config \
   --dry-run=client -o yaml | kubectl apply -f -
 
+# Dagster Basic Auth
+DAGSTER_PASSWORD=$(terraform output -raw dagster_webserver_password)
+DAGSTER_HTPASSWD=$(htpasswd -nb dagster "$DAGSTER_PASSWORD")
+
+echo "→ Syncing dagster-basic-auth..."
+kubectl create secret generic dagster-basic-auth \
+  --from-literal=auth="$DAGSTER_HTPASSWD" \
+  --save-config \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 echo "Done. All secrets synced."

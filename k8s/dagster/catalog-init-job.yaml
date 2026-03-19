@@ -39,7 +39,7 @@ kind: Job
 metadata:
   name: catalog-schema-init
 spec:
-  ttlSecondsAfterFinished: 86400
+  ttlSecondsAfterFinished: 300
   template:
     spec:
       restartPolicy: Never

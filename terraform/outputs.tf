@@ -96,3 +96,9 @@ output "lb_certificate_id" {
   value       = scaleway_lb_certificate.buttprint.id
   description = "Zoned ID of the TLS certificate (needed for K8s CCM annotation)"
 }
+
+output "dagster_webserver_password" {
+  description = "Dagster webserver Basic Auth password (plain text — hashed by sync-secrets.sh)"
+  value       = var.dagster_webserver_password
+  sensitive   = true
+}

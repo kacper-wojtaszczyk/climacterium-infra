@@ -18,3 +18,11 @@ resource "scaleway_domain_record" "api" {
   data     = scaleway_lb_ip.main.ip_address
   ttl      = 300
 }
+
+resource "scaleway_domain_record" "dagster" {
+  dns_zone = scaleway_domain_zone.buttprint.id
+  name     = "dagster"
+  type     = "A"
+  data     = scaleway_lb_ip.main.ip_address
+  ttl      = 300
+}

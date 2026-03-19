@@ -1,4 +1,4 @@
-# ADR 001: ARM64 Node Instance Type (BASIC2-A2C-4G)
+# ADR 001: ARM64 Node Instance Type (BASIC2-A2C-8G)
 
 ## Status
 
@@ -6,11 +6,9 @@ Accepted
 
 ## Context
 
-Kapsule node pools require a minimum of 4 GB RAM per node. The cluster has two pools:
-- **services** — always-on, 1 node; runs all stateless services + ClickHouse + Dagster daemon
-- **jobs** — scale-to-zero, 0–2 nodes; runs Dagster ETL batch jobs only
+Kapsule node pools require a minimum of 4 GB RAM per node. The cluster uses a single autoscaling pool (1–3 nodes) that runs all services and batch jobs (see [ADR 002](002-single-node-pool.md)).
 
-The instance type chosen for both pools determines cost, architecture alignment, and operational characteristics across the entire deployment.
+The instance type chosen determines cost, architecture alignment, and operational characteristics across the entire deployment.
 
 ### Options Considered
 
@@ -30,32 +28,31 @@ The instance type chosen for both pools determines cost, architecture alignment,
 - ❌ Burstable/shared vCPUs, no production SLA
 - ❌ Excluded from Kapsule's supported instance list
 
-**Option C: BASIC2-A2C-4G** (ARM64 Ampere Altra, 2 vCPU, 4 GB RAM — cheaper than PLAY2-NANO)
+**Option C: BASIC2-A2C-8G** (ARM64 Ampere Altra, 2 vCPU, 8 GB RAM)
 
 - ✅ Production-tier instance with SLA — eligible for Kapsule node pools
-- ✅ Lower cost than PLAY2-NANO at equivalent RAM/vCPU
 - ✅ Ampere Altra has significantly better performance-per-watt than x86 server CPUs — lower carbon footprint per workload
 - ✅ Architecture alignment: developer machine (Apple Silicon M-series) and CI runner (GitHub `ubuntu-24.04-arm`) are both ARM64 — local builds, CI builds, and production nodes all target `linux/arm64` natively, with no cross-compilation at any stage
 - ✅ All services (Go, Node.js, Python/Dagster, ClickHouse) have official ARM64 support
+- ✅ 8GB RAM provides ample headroom for persistent services (~4GB at idle) plus batch job peaks
 - ⚠️ Normally ARM64 images must be built explicitly — an `amd64`-only image fails on these nodes. This is mitigated by the architecture alignment above and enforced by the CI pipeline
 
 ## Decision
 
-Use **BASIC2-A2C-4G** for both the services and jobs node pools.
+Use **BASIC2-A2C-8G** for the node pool.
 
 The primary motivation is sustainability: Ampere Altra processors deliver substantially better performance per watt than equivalent x86 designs. For a project concerned with environmental data, running the infrastructure on more energy-efficient hardware is consistent with the project's values.
 
 A secondary motivation is architecture alignment. I use an Apple Silicon Mac; CI runs on GitHub's ARM64 hosted runners (`ubuntu-24.04-arm`). With ARM64 Kapsule nodes, `docker build` on the developer's machine, the CI pipeline, and the production cluster all target the same `linux/arm64` architecture natively. There is no cross-compilation at any stage — no QEMU, no `--platform` flags in local builds, no architecture-specific "works on my machine" failure modes.
 
-The cost saving over PLAY2-NANO is a nice bonus.
+The cluster was initially deployed with BASIC2-A2C-4G (4GB RAM). Under real load, persistent services (ClickHouse, Dagster, jackfruit-api, buttprint-api, buttprint-fe) consume ~4GB at idle — leaving no headroom and the Dagster batch jobs also peak above 4GB. Upgraded to BASIC2-A2C-8G after observing this in production.
 
 ## Consequences
 
 ### Positive
 
 - **Sustainability**: Lower energy consumption and carbon footprint per workload compared to x86 nodes
-- **Architecture parity**: `docker build` locally (M-series Mac), in CI (ARM64 runner), and in production (BASIC2-A2C-4G) all produce identical `linux/arm64` images — no translation layer anywhere in the chain
-- **Cost**: Cheaper than PLAY2-NANO, with the same RAM and vCPU count and a production SLA
+- **Architecture parity**: `docker build` locally (M-series Mac), in CI (ARM64 runner), and in production (BASIC2-A2C-8G) all produce identical `linux/arm64` images — no translation layer anywhere in the chain
 - **Production SLA**: BASIC2 is a production-tier line, unlike DEV1; eligible for Kapsule and backed by Scaleway's uptime commitments
 
 ### Negative

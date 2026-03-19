@@ -24,7 +24,7 @@ spec:
               name: http
           resources:
             requests:
-              memory: "384Mi"
+              memory: "512Mi"
               cpu: "100m"
             limits:
               memory: "768Mi"

@@ -37,123 +37,119 @@ data:
       module: dagster_k8s
       class: K8sRunLauncher
       config:
+        instance_config_map: "dagster-config"
+        job_image: "rg.nl-ams.scw.cloud/climacterium/pipeline-python:latest"
         job_namespace: "default"
         service_account_name: "dagster"
-        job_pod_config_override:
-          spec:
-            tolerations:
-              - key: workload
-                operator: Equal
-                value: batch
-                effect: NoSchedule
-            affinity:
-              nodeAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  nodeSelectorTerms:
-                    - matchExpressions:
-                        - key: scw-k8s-pool-name
-                          operator: In
-                          values:
-                            - jobs
+        run_k8s_config:
+          job_spec_config:
+            ttl_seconds_after_finished: 600
+          pod_spec_config:
             volumes:
               - name: scratch
                 emptyDir:
                   sizeLimit: 5Gi
-            containers:
-              - name: run
-                env:
-                  - name: POSTGRES_USER
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: user
-                  - name: POSTGRES_PASSWORD
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: password
-                  - name: POSTGRES_HOST
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: host
-                  - name: POSTGRES_PORT
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: port
-                  - name: POSTGRES_DB
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: database
-                  - name: CLICKHOUSE_USER
-                    valueFrom:
-                      secretKeyRef:
-                        name: clickhouse-credentials
-                        key: user
-                  - name: CLICKHOUSE_PASSWORD
-                    valueFrom:
-                      secretKeyRef:
-                        name: clickhouse-credentials
-                        key: password
-                  - name: CLICKHOUSE_HOST
-                    valueFrom:
-                      secretKeyRef:
-                        name: clickhouse-credentials
-                        key: host
-                  - name: CLICKHOUSE_DB
-                    valueFrom:
-                      secretKeyRef:
-                        name: clickhouse-credentials
-                        key: database
-                  - name: MINIO_ACCESS_KEY
-                    valueFrom:
-                      secretKeyRef:
-                        name: s3-credentials
-                        key: access-key
-                  - name: MINIO_SECRET_KEY
-                    valueFrom:
-                      secretKeyRef:
-                        name: s3-credentials
-                        key: secret-key
-                  - name: MINIO_ENDPOINT_URL
-                    valueFrom:
-                      secretKeyRef:
-                        name: s3-credentials
-                        key: endpoint
-                  - name: ADS_API_KEY
-                    valueFrom:
-                      secretKeyRef:
-                        name: external-api-keys
-                        key: ads-api-key
-                  - name: CATALOG_PG_USER
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: user
-                  - name: CATALOG_PG_PASSWORD
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: password
-                  - name: CATALOG_PG_HOST
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: host
-                  - name: CATALOG_PG_PORT
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: port
-                  - name: CATALOG_PG_DB
-                    valueFrom:
-                      secretKeyRef:
-                        name: postgres-credentials
-                        key: catalog-database
-                  - name: MINIO_USE_SSL
-                    value: "true"
-                volumeMounts:
-                  - name: scratch
-                    mountPath: /tmp/grib
+          container_config:
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "4Gi"
+              limits:
+                cpu: "1500m"
+                memory: "6Gi"
+            env:
+              - name: POSTGRES_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: user
+              - name: POSTGRES_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: password
+              - name: POSTGRES_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: host
+              - name: POSTGRES_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: port
+              - name: POSTGRES_DB
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: database
+              - name: CLICKHOUSE_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: clickhouse-credentials
+                    key: user
+              - name: CLICKHOUSE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: clickhouse-credentials
+                    key: password
+              - name: CLICKHOUSE_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: clickhouse-credentials
+                    key: host
+              - name: CLICKHOUSE_DB
+                valueFrom:
+                  secretKeyRef:
+                    name: clickhouse-credentials
+                    key: database
+              - name: MINIO_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: s3-credentials
+                    key: access-key
+              - name: MINIO_SECRET_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: s3-credentials
+                    key: secret-key
+              - name: MINIO_ENDPOINT_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: s3-credentials
+                    key: endpoint
+              - name: ADS_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: external-api-keys
+                    key: ads-api-key
+              - name: CATALOG_PG_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: user
+              - name: CATALOG_PG_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: password
+              - name: CATALOG_PG_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: host
+              - name: CATALOG_PG_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: port
+              - name: CATALOG_PG_DB
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-credentials
+                    key: catalog-database
+              - name: MINIO_USE_SSL
+                value: "true"
+            volumeMounts:
+              - name: scratch
+                mountPath: /tmp/grib

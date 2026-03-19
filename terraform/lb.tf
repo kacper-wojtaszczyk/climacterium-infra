@@ -15,7 +15,7 @@ resource "acme_registration" "main" {
 resource "acme_certificate" "buttprint" {
   account_key_pem           = acme_registration.main.account_key_pem
   common_name               = "buttprint.eu"
-  subject_alternative_names = ["api.buttprint.eu"]
+  subject_alternative_names = ["api.buttprint.eu", "dagster.buttprint.eu"]
 
   dns_challenge {
     provider = "scaleway"

@@ -43,3 +43,9 @@ variable "acme_email" {
   type        = string
   description = "Email address for Let's Encrypt ACME registration"
 }
+
+variable "dagster_webserver_password" {
+  type        = string
+  description = "Password for Dagster webserver Basic Auth (username: dagster)"
+  sensitive   = true
+}

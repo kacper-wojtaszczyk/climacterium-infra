@@ -6,7 +6,8 @@ This directory contains Architecture Decision Records (ADRs) documenting signifi
 
 | ADR | Title | Status |
 |-----|-------|--------|
-| [001](001-arm64-node-instance-type.md) | ARM64 Node Instance Type (BASIC2-A2C-4G) | Accepted |
+| [001](001-arm64-node-instance-type.md) | ARM64 Node Instance Type (BASIC2-A2C-8G) | Accepted |
+| [002](002-single-node-pool.md) | Single Node Pool (Merge Jobs Pool into Services) | Accepted |
 
 ## Format
 
