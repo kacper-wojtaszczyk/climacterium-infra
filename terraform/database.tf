@@ -35,3 +35,17 @@ resource "scaleway_rdb_privilege" "dagster_admin" {
   permission    = "all"
   region        = var.region
 }
+
+resource "scaleway_rdb_database" "jackfruit" {
+  instance_id = scaleway_rdb_instance.postgres.id
+  name        = "jackfruit"
+  region      = var.region
+}
+
+resource "scaleway_rdb_privilege" "jackfruit_admin" {
+  instance_id   = scaleway_rdb_instance.postgres.id
+  user_name     = scaleway_rdb_user.admin.name
+  database_name = scaleway_rdb_database.jackfruit.name
+  permission    = "all"
+  region        = var.region
+}

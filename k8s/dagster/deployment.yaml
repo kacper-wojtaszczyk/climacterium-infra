@@ -21,11 +21,11 @@ spec:
           command: ["dagster-daemon", "run"]
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "50m"
-            limits:
-              memory: "256Mi"
+              memory: "384Mi"
               cpu: "100m"
+            limits:
+              memory: "768Mi"
+              cpu: "500m"
           env:
             - name: DAGSTER_HOME
               value: /opt/dagster/dagster_home
@@ -50,7 +50,10 @@ spec:
                   name: postgres-credentials
                   key: port
             - name: POSTGRES_DB
-              value: "dagster"
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
             - name: CLICKHOUSE_USER
               valueFrom:
                 secretKeyRef:
@@ -93,6 +96,31 @@ spec:
                   key: ads-api-key
             - name: MINIO_USE_SSL
               value: "true"
+            - name: CATALOG_PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: user
+            - name: CATALOG_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: CATALOG_PG_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: CATALOG_PG_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: CATALOG_PG_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: catalog-database
           volumeMounts:
             - name: dagster-config
               mountPath: /opt/dagster/dagster_home/dagster.yaml

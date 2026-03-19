@@ -24,11 +24,11 @@ spec:
               name: http
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "50m"
-            limits:
-              memory: "256Mi"
+              memory: "384Mi"
               cpu: "100m"
+            limits:
+              memory: "768Mi"
+              cpu: "500m"
           livenessProbe:
             httpGet:
               path: /server_info
@@ -69,6 +69,73 @@ spec:
                 secretKeyRef:
                   name: postgres-credentials
                   key: database
+            - name: CATALOG_PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: user
+            - name: CATALOG_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: CATALOG_PG_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: CATALOG_PG_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: CATALOG_PG_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: catalog-database
+            - name: CLICKHOUSE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: user
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: password
+            - name: CLICKHOUSE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: host
+            - name: CLICKHOUSE_DB
+              valueFrom:
+                secretKeyRef:
+                  name: clickhouse-credentials
+                  key: database
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: secret-key
+            - name: MINIO_ENDPOINT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: endpoint
+            - name: MINIO_USE_SSL
+              value: "true"
+            - name: ADS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: external-api-keys
+                  key: ads-api-key
           volumeMounts:
             - name: dagster-config
               mountPath: /opt/dagster/dagster_home/dagster.yaml

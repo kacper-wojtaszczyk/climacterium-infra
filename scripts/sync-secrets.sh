@@ -20,7 +20,8 @@ kubectl create secret generic postgres-credentials \
   --from-literal=port="$PG_PORT" \
   --from-literal=user="$PG_USER" \
   --from-literal=password="$PG_PASSWORD" \
-  --from-literal=database="postgres" \
+  --from-literal=database="dagster" \
+  --from-literal=catalog-database="jackfruit" \
   --from-literal=dsn="$PG_DSN" \
   --save-config \
   --dry-run=client -o yaml | kubectl apply -f -

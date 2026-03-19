@@ -127,6 +127,31 @@ data:
                       secretKeyRef:
                         name: external-api-keys
                         key: ads-api-key
+                  - name: CATALOG_PG_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: user
+                  - name: CATALOG_PG_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: password
+                  - name: CATALOG_PG_HOST
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: host
+                  - name: CATALOG_PG_PORT
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: port
+                  - name: CATALOG_PG_DB
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: catalog-database
                   - name: MINIO_USE_SSL
                     value: "true"
                 volumeMounts:

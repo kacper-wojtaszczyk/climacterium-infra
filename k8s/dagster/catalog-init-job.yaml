@@ -1,0 +1,90 @@
+---
+# One-shot Job to initialize the catalog schema in the jackfruit PostgreSQL database.
+# Run once after `terraform apply` creates the jackfruit database:
+#   kubectl apply -f k8s/dagster/catalog-init-job.yaml
+#   kubectl wait --for=condition=complete job/catalog-schema-init --timeout=60s
+#
+# The Job is idempotent (CREATE SCHEMA IF NOT EXISTS, CREATE TABLE IF NOT EXISTS)
+# and safe to re-run if the schema already exists.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog-migrations
+data:
+  init.sql: |
+    CREATE SCHEMA IF NOT EXISTS catalog;
+
+    CREATE TABLE IF NOT EXISTS catalog.raw_files (
+        id              UUID PRIMARY KEY,
+        source          TEXT NOT NULL,
+        dataset         TEXT NOT NULL,
+        date            DATE NOT NULL,
+        s3_key          TEXT NOT NULL UNIQUE,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS catalog.curated_data (
+        id              UUID PRIMARY KEY,
+        raw_file_id     UUID NOT NULL REFERENCES catalog.raw_files(id),
+        variable        TEXT NOT NULL,
+        unit            TEXT NOT NULL,
+        timestamp       TIMESTAMPTZ NOT NULL,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_curated_data_raw ON catalog.curated_data (raw_file_id);
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: catalog-schema-init
+spec:
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: init
+          image: postgres:18
+          command: ["psql", "-f", "/migrations/init.sql"]
+          env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: user
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: catalog-database
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+      volumes:
+        - name: migrations
+          configMap:
+            name: catalog-migrations
+  backoffLimit: 3
