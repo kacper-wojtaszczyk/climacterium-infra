@@ -33,6 +33,12 @@ variable "scw_secret_key" {
   sensitive   = true
 }
 
+variable "ads_api_key" {
+  type        = string
+  description = "Copernicus ADS API key for climate data downloads"
+  sensitive   = true
+}
+
 variable "acme_email" {
   type        = string
   description = "Email address for Let's Encrypt ACME registration"
