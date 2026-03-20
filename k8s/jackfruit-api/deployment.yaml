@@ -92,4 +92,4 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: postgres-credentials
-                  key: database
+                  key: catalog-database
