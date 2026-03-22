@@ -1,0 +1,9 @@
+project_id                 = ""          # Scaleway project ID
+region                     = ""          # Scaleway region
+zone                       = ""          # Scaleway zone
+acme_email                 = ""          # Let's Encrypt registration email
+postgres_password          = ""          # Managed PostgreSQL admin password
+clickhouse_password        = ""          # ClickHouse default user password
+scw_secret_key             = ""          # Scaleway API secret key (ACME DNS-01)
+ads_api_key                = ""          # Copernicus ADS API key
+dagster_webserver_password = ""          # Dagster Basic Auth password (username: dagster)
