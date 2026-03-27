@@ -84,7 +84,6 @@ Reintroduce a dedicated batch pool if:
 
 ## References
 
-- Infrastructure spec: `docs/climacterium-infrastructure.md`
 - Node pool Terraform: `terraform/cluster.tf`
 - Dagster run launcher config: `k8s/dagster/configmap.yaml`
 - Previous pool architecture: ADR 001 (`docs/adr/001-arm64-node-instance-type.md`)

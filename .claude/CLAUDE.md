@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working in the climacterium-infr
 
 ## What This Is
 
-Terraform + Kubernetes manifests for the all-Scaleway deployment of the [Buttprint](../docs/buttprint.md) ecosystem. This repo provisions and configures the infrastructure that all three application services run on:
+Terraform + Kubernetes manifests for the all-Scaleway deployment of the Buttprint ecosystem. This repo provisions and configures the infrastructure that all three application services run on:
 
 ```
 Terraform (this repo)
@@ -25,7 +25,7 @@ K8s manifests (this repo)
   └── Secrets, ConfigMaps, Ingress rules
 ```
 
-**Full spec:** [docs/buttprint-infrastructure.md](../../docs/buttprint-infrastructure.md)
+
 **Node type decision:** [docs/adr/001-arm64-node-instance-type.md](../docs/adr/001-arm64-node-instance-type.md)
 
 ## Commands

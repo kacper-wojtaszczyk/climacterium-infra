@@ -67,8 +67,5 @@ The cluster was initially deployed with BASIC2-A2C-4G (4GB RAM). Under real load
 
 ## References
 
-- Infrastructure spec: `docs/buttprint-infrastructure.md`
 - Node pool Terraform: `terraform/cluster.tf`
 - CI pipeline: `.github/workflows/deploy.yml`
-- Infra task guide for cluster provisioning: `docs/guides/infra-tasks/02-terraform-cluster.md`
-- Infra task guide for containerisation: `docs/guides/infra-tasks/06-containerize-services.md`
