@@ -45,3 +45,5 @@ spec:
               value: "http://jackfruit-api.default.svc.cluster.local:8080"
             - name: PORT
               value: "8080"
+            - name: MAXMIND_DB_PATH
+              value: "/data/GeoLite2-City.mmdb"
