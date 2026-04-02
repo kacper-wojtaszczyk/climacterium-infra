@@ -74,4 +74,13 @@ kubectl create secret generic dagster-basic-auth \
   --save-config \
   --dry-run=client -o yaml | kubectl apply -f -
 
+# Cockpit (Alloy log push token)
+COCKPIT_TOKEN=$(terraform output -raw cockpit_token_secret_key)
+
+echo "→ Syncing cockpit-credentials..."
+kubectl create secret generic cockpit-credentials \
+  --from-literal=token="$COCKPIT_TOKEN" \
+  --save-config \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 echo "Done. All secrets synced."

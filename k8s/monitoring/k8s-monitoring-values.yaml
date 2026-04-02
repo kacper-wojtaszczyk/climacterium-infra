@@ -1,0 +1,31 @@
+cluster:
+  name: climacterium
+
+destinations:
+  cockpit-logs:
+    type: loki
+    url: "https://6f5a9f37-fd9d-452e-a8c1-e9f268f0aefe.logs.cockpit.nl-ams.scw.cloud/loki/api/v1/push"
+    auth:
+      type: bearerToken
+      bearerTokenKey: token
+    secret:
+      create: false
+      name: cockpit-credentials
+
+collectors:
+  alloy:
+    presets:
+      - daemonset
+      - filesystem-log-reader
+
+podLogsViaLoki:
+  enabled: true
+
+clusterEvents:
+  enabled: true
+
+nodeLogs:
+  enabled: true
+
+selfReporting:
+  enabled: false

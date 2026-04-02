@@ -33,6 +33,30 @@ data:
     nux:
       enabled: false
 
+    compute_logs:
+      module: dagster.core.storage.noop_compute_log_manager
+      class: NoOpComputeLogManager
+
+    local_artifact_storage:
+      module: dagster.core.storage.root
+      class: LocalArtifactStorage
+      config:
+        base_dir: /tmp/dagster-artifacts
+
+    python_logs:
+      python_log_level: INFO
+      dagster_handler_config:
+        handlers:
+          console:
+            class: logging.StreamHandler
+            level: INFO
+            stream: ext://sys.stdout
+            formatter: json
+        formatters:
+          json:
+            "()": pythonjsonlogger.json.JsonFormatter
+            format: "%(asctime)s %(name)s %(levelname)s %(message)s"
+
     run_launcher:
       module: dagster_k8s
       class: K8sRunLauncher

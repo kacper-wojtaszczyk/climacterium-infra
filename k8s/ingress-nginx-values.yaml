@@ -20,3 +20,5 @@ controller:
   config:
     use-forwarded-headers: "true"
     proxy-read-timeout: "30"
+    log-format-escape-json: "true"
+    log-format-upstream: '{"time":"$time_iso8601","remote_addr":"$remote_addr","request_method":"$request_method","request_uri":"$request_uri","status":$status,"body_bytes_sent":$body_bytes_sent,"request_time":$request_time,"upstream_response_time":"$upstream_response_time","http_referer":"$http_referer","http_user_agent":"$http_user_agent"}'
