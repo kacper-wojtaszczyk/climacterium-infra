@@ -3,42 +3,124 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
       id-token: write
+      actions: read
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.14"
+
+      - name: Initialize Terraform (providers only)
+        run: terraform -chdir=terraform init -backend=false
 
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
+          classify_inline_comments: 'true'
+          include_fix_links: 'true'
+          prompt: |
+            Review PR #${{ github.event.pull_request.number }} in this Terraform + Kubernetes
+            infrastructure repo (Scaleway Kapsule, HCL, YAML manifests).
 
+            ## How to start
+
+            You are already on the PR merge ref. Terraform providers are initialized
+            (no backend/state — `init -backend=false`).
+            Do NOT run git checkout or switch branches. The PR number is already known —
+            skip discovery commands and go straight to the diff.
+
+            1. Run `gh pr diff ${{ github.event.pull_request.number }}` to get the full diff.
+            2. Read all changed files in parallel (use multiple Read tool calls in one message).
+            3. Run verification commands in parallel:
+               `terraform -chdir=terraform fmt -check -recursive`,
+               `terraform -chdir=terraform validate`
+            4. Post inline comments, then a summary comment.
+
+            Maximize parallel tool calls throughout — batch independent reads, verifications,
+            and inline comments into single messages whenever possible.
+
+            ## What to check
+
+            **Terraform — correctness & conventions**
+            - HCL formatting: any deviations `terraform fmt` would fix
+            - Resource naming: infrastructure resources use `climacterium-` prefix
+            - Sensitive values: all credential outputs and variables must have `sensitive = true`;
+              no hardcoded secrets, tokens, or IPs in `.tf` files (values belong in `.tfvars`)
+            - Provider version constraints: `scaleway/scaleway ~> 2.0`, `vancluever/acme ~> 2.0`
+            - Scaleway-specific correctness:
+              - No `zone` attribute on `scaleway_k8s_cluster` (region only)
+              - Pool taints set via `tags` (e.g. `"taint=key=value:Effect"`), not HCL blocks
+              - Pool `size` must be ≥ 1 at creation (cannot create a 0-sized pool)
+            - State safety: flag changes that would force resource recreation
+              (e.g. renaming a `scaleway_rdb_instance`) — these must be called out explicitly
+            - Lifecycle rules: `prevent_destroy` on critical resources (DB, buckets);
+              `create_before_destroy` on certificates
+            - Dependencies: prefer implicit references; use `depends_on` only when
+              Terraform cannot infer the ordering
+            - Variables: descriptions on all variables, validation blocks where constraints exist
+
+            **Kubernetes manifests**
+            - Resource requests AND limits on all containers
+            - Liveness + readiness probes on all long-running pods (Deployments, StatefulSets)
+            - Secrets referenced via `secretKeyRef` or `envFrom`, never hardcoded in manifests
+            - StatefulSet for stateful workloads (ClickHouse), Deployment for stateless
+            - Image tags: full registry path (`rg.nl-ams.scw.cloud/climacterium/<svc>:<tag>`),
+              no `:latest` in production
+            - Label/selector consistency: `matchLabels` in spec.selector must match
+              `labels` in template.metadata
+            - Service `targetPort` matches the container's `containerPort`
+            - Ingress: host-based routing, SSL redirect annotations, `ingressClassName: nginx`
+            - PVC: `ReadWriteOnce` access mode, `scw-bssd` storage class
+            - ARM64 compatibility: all container images must have ARM64 builds
+
+            **Scaleway LB / TLS**
+            - TLS via ACME provider + DNS-01 challenge, not Scaleway native `letsencrypt`
+            - Per-port cert annotation format: `"443:<cert-id>"`
+            - LB protocol: `scw-loadbalancer-protocol-http: "*"` for TLS termination at LB
+            - nginx config: `use-forwarded-headers: "true"`, NOT `use-proxy-protocol`
+
+            **Security**
+            - No secrets, credentials, or internal URLs committed in `.tf` or YAML files
+            - Secret templates in `k8s/secrets/` should contain only placeholder values
+
+            ## What NOT to check
+            - HCL formatting style (terraform fmt handles this)
+            - `.tfstate` contents (gitignored, never committed)
+            - Actual secret values in `k8s/secrets/` templates (contain PLACEHOLDER values)
+            - Pre-existing tech debt unrelated to this PR's changes
+            - Cost optimization suggestions (intentional decisions documented in `docs/adr/`)
+
+            ## Verification
+            You can run these commands to verify the changes:
+            - `terraform -chdir=terraform fmt -check -recursive` — formatting check
+            - `terraform -chdir=terraform validate` — syntax and type validation
+            - (No `terraform plan` — requires credentials. No `kubectl` — no cluster access.)
+
+            ## Output format
+            - Post specific issues as inline comments on the relevant diff lines.
+              Tag severity: 🔴 bug/must-fix, 🟡 nit/suggestion, 🟣 pre-existing.
+            - When posting inline comments, set `confirmed` to `false` so comments are
+              buffered and classified by severity before posting.
+            - Post a single summary comment on the PR with: what the PR does well,
+              overall assessment, and a count of findings by severity.
+          claude_args: |
+            --model claude-opus-4-6
+            --max-turns 15
+            --allowedTools "Read,Grep,Glob,Bash(git:*),Bash(terraform:*),Bash(gh pr:*),mcp__github_inline_comment__create_inline_comment"
