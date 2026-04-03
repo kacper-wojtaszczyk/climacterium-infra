@@ -3,6 +3,10 @@ resource "scaleway_cockpit_source" "logs" {
   name           = "production-logs"
   type           = "logs"
   retention_days = 7
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "scaleway_cockpit_token" "alloy" {
