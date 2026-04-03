@@ -140,7 +140,12 @@ spec:
             - name: dagster-config
               mountPath: /opt/dagster/dagster_home/dagster.yaml
               subPath: dagster.yaml
+            - name: dagster-artifacts
+              mountPath: /tmp/dagster-artifacts
       volumes:
         - name: dagster-config
           configMap:
             name: dagster-config
+        - name: dagster-artifacts
+          emptyDir:
+            sizeLimit: 256Mi

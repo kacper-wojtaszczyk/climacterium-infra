@@ -102,3 +102,15 @@ output "dagster_webserver_password" {
   value       = var.dagster_webserver_password
   sensitive   = true
 }
+
+output "cockpit_logs_push_url" {
+  description = "Cockpit Loki push URL for log ingestion"
+  value       = scaleway_cockpit_source.logs.push_url
+  sensitive   = true
+}
+
+output "cockpit_token_secret_key" {
+  description = "Cockpit token secret key (write-only log scope)"
+  value       = scaleway_cockpit_token.alloy.secret_key
+  sensitive   = true
+}

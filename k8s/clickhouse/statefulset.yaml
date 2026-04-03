@@ -51,6 +51,9 @@ spec:
               mountPath: /var/lib/clickhouse
             - name: init-scripts
               mountPath: /docker-entrypoint-initdb.d
+            - name: logging-config
+              mountPath: /etc/clickhouse-server/config.d/z_logging.xml
+              subPath: z_logging.xml
           livenessProbe:
             httpGet:
               path: /ping
@@ -67,6 +70,9 @@ spec:
         - name: init-scripts
           configMap:
             name: clickhouse-init
+        - name: logging-config
+          configMap:
+            name: clickhouse-logging
   volumeClaimTemplates:
     - metadata:
         name: data
