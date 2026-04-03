@@ -139,3 +139,12 @@ docs/
 - **Secrets for credentials:** Never hardcode credentials in Deployment manifests. Use k8s Secrets (referenced via `envFrom` or `env[].valueFrom.secretKeyRef`)
 - **StatefulSet for ClickHouse:** Not Deployment — PVC lifecycle is tied to the StatefulSet. Deleting a StatefulSet does not delete its PVCs
 - **Image references:** `rg.nl-ams.scw.cloud/climacterium/<service>:<tag>` — always use the full registry path
+
+## Code Review
+
+When reviewing PRs (automated or `@claude`-triggered):
+
+- **Flag** hardcoded secrets or credentials in `.tf`/YAML, missing `sensitive = true` on outputs, missing resource requests/limits on pods, missing health probes, Scaleway provider quirks (zone on clusters, taints via tags), changes that force resource recreation without explicit intent, label/selector mismatches, `:latest` image tags
+- **Skip** formatting (terraform fmt handles HCL), `.tfstate` contents, actual secret values in templates, pre-existing debt unrelated to the PR, cost optimization (documented in ADRs)
+- **Verify** with `terraform -chdir=terraform fmt -check` and `terraform -chdir=terraform validate` before posting findings
+- **Severity tags:** 🔴 must-fix, 🟡 nit, 🟣 pre-existing
