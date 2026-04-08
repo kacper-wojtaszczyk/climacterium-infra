@@ -49,3 +49,9 @@ variable "dagster_webserver_password" {
   description = "Password for Dagster webserver Basic Auth (username: dagster)"
   sensitive   = true
 }
+
+variable "kubeconfig_path" {
+  description = "Path to the kubeconfig file the Helm provider should use"
+  type        = string
+  default     = "~/.kube/config"
+}

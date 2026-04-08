@@ -4,9 +4,7 @@ cluster:
 destinations:
   cockpit-logs:
     type: loki
-    # Source: terraform output cockpit_logs_push_url
-    # Contains the UUID of scaleway_cockpit_source.logs — will change if the resource is recreated.
-    url: "https://6f5a9f37-fd9d-452e-a8c1-e9f268f0aefe.logs.cockpit.nl-ams.scw.cloud/loki/api/v1/push"
+    url: ${cockpit_push_url}
     auth:
       type: bearerToken
       bearerTokenKey: token
