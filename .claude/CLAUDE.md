@@ -14,7 +14,8 @@ Terraform (this repo)
   ├── Managed PostgreSQL (DB-DEV-S)
   ├── Object Storage (jackfruit-raw bucket)
   ├── Container Registry (climacterium namespace)
-  └── Load Balancer + DNS (buttprint.eu)
+  ├── Load Balancer + DNS (buttprint.eu)
+  └── Helm releases (ingress-nginx, k8s-monitoring)
 
 K8s manifests (this repo)
   ├── clickhouse (StatefulSet + PVC)
@@ -60,27 +61,30 @@ docker login rg.nl-ams.scw.cloud/climacterium -u nologin --password-stdin <<< "$
 
 ```
 terraform/
-├── providers.tf          ← Scaleway provider config
-├── variables.tf          ← Input variables (project_id, region, zone)
+├── providers.tf          ← Scaleway + ACME + Helm provider config
+├── variables.tf          ← Input variables (project_id, region, zone, kubeconfig_path, secrets)
 ├── networking.tf         ← VPC, Private Network
 ├── cluster.tf            ← Kapsule cluster, node pools
 ├── database.tf           ← Managed PostgreSQL
 ├── storage.tf            ← Object Storage bucket, IAM
 ├── registry.tf           ← Container Registry namespace
 ├── dns.tf                ← DNS zone + records (buttprint.eu)
+├── lb.tf                 ← Load Balancer + ACME TLS cert
+├── helm.tf               ← helm_release resources (ingress-nginx, k8s-monitoring)
 ├── outputs.tf            ← Kubeconfig, connection strings (sensitive)
 └── terraform.tfvars      ← Variable values (gitignored)
 
 k8s/
-├── ingress.yaml              ← Ingress resource (host-based routing)
-├── ingress-nginx-values.yaml ← Helm values for nginx Ingress controller (CCM annotations)
-├── placeholder/              ← Temporary placeholder (Task 05, replaced in Task 07)
-├── clickhouse/               ← StatefulSet + Service + PVC + ConfigMap
-├── jackfruit-api/            ← Deployment + Service (ClusterIP)
-├── buttprint-api/            ← Deployment + Service + Ingress
-├── buttprint-fe/             ← Deployment + Service + Ingress
-├── dagster/                  ← Daemon + Webserver + ServiceAccount + RBAC
-└── secrets/                  ← Secret templates (values not committed)
+├── ingress.yaml                  ← Ingress resource (host-based routing)
+├── ingress-nginx-values.yaml.tpl ← Helm values template for nginx Ingress controller (rendered by terraform/helm.tf)
+├── placeholder/                  ← Temporary placeholder (Task 05, replaced in Task 07)
+├── clickhouse/                   ← StatefulSet + Service + PVC + ConfigMap
+├── jackfruit-api/                ← Deployment + Service (ClusterIP)
+├── buttprint-api/                ← Deployment + Service + Ingress
+├── buttprint-fe/                 ← Deployment + Service + Ingress
+├── dagster/                      ← Daemon + Webserver + ServiceAccount + RBAC
+├── monitoring/                   ← Helm values template for k8s-monitoring (rendered by terraform/helm.tf)
+└── secrets/                      ← Secret templates (values not committed)
 
 docs/
 └── adr/                  ← Architecture Decision Records
@@ -119,16 +123,17 @@ docs/
 - **Private Network for DB/S3:** PostgreSQL endpoint on Private Network only. Object Storage accessed via S3 API (Scaleway-internal from pods)
 - **TLS at LB via ACME provider:** Let's Encrypt cert obtained via `vancluever/acme` provider (DNS-01 challenge through Scaleway DNS), uploaded to LB as `custom_certificate`. Not cert-manager in-cluster, not Scaleway's native `letsencrypt` block (which conflicts with CCM's port 80 frontend)
 - **ClickHouse as StatefulSet:** Not a Deployment — needs persistent storage (PVC) and stable network identity. `ReplacingMergeTree` engine
+- **Helm releases managed by Terraform:** ingress-nginx and k8s-monitoring are provisioned via `helm_release` resources in `terraform/helm.tf`, not manual `helm install/upgrade`. Values files live as `.yaml.tpl` templates rendered by `templatefile()` so Terraform-derived IDs (LB ID, cert ID, Cockpit URL) propagate automatically. No manual chart installs in CI/CD — `terraform apply` is the single source of truth
 - **Dockerfiles live in service repos:** This repo contains only infrastructure. `jackfruit/`, `buttprint-api/`, `buttprint-fe/` each own their Dockerfile
 
 ## Terraform Conventions
 
 - **Provider:** `scaleway/scaleway ~> 2.0` — check [Scaleway provider docs](https://registry.terraform.io/providers/scaleway/scaleway/latest/docs) before writing HCL (breaking changes between versions)
 - **Terraform version:** `>= 1.5`
-- **Providers:** `scaleway/scaleway ~> 2.0` + `vancluever/acme ~> 2.0` (for TLS cert via DNS-01)
-- **File organization:** One file per resource type — `networking.tf`, `cluster.tf`, `database.tf`, `storage.tf`, `registry.tf`, `dns.tf`, `lb.tf`, `outputs.tf`
+- **Providers:** `scaleway/scaleway ~> 2.0` + `vancluever/acme ~> 2.0` (TLS cert via DNS-01) + `hashicorp/helm ~> 3.0` (Helm release management)
+- **File organization:** One file per resource type — `networking.tf`, `cluster.tf`, `database.tf`, `storage.tf`, `registry.tf`, `dns.tf`, `lb.tf`, `helm.tf`, `outputs.tf`
 - **Sensitive outputs:** Mark all connection strings, credentials, and kubeconfig as `sensitive = true`
-- **Variable defaults:** Region (`nl-ams`) and zone (`nl-ams-1`) have defaults. `project_id` has no default (must be provided via `terraform.tfvars`)
+- **Variable defaults:** Region (`nl-ams`) and zone (`nl-ams-1`) have defaults. `project_id` has no default (must be provided via `terraform.tfvars`). `kubeconfig_path` defaults to `~/.kube/config` — override per developer/CI in `terraform.tfvars` (the Helm provider does NOT honor `KUBECONFIG`, so this variable is the only way to point it at a non-default file)
 - **State is sacred:** Never delete `terraform.tfstate` manually. Never run `terraform destroy` without explicit intent
 
 ## Kubernetes Conventions
@@ -139,12 +144,13 @@ docs/
 - **Secrets for credentials:** Never hardcode credentials in Deployment manifests. Use k8s Secrets (referenced via `envFrom` or `env[].valueFrom.secretKeyRef`)
 - **StatefulSet for ClickHouse:** Not Deployment — PVC lifecycle is tied to the StatefulSet. Deleting a StatefulSet does not delete its PVCs
 - **Image references:** `rg.nl-ams.scw.cloud/climacterium/<service>:<tag>` — always use the full registry path
+- **Helm values as templates:** When a chart needs Terraform-derived values (LB IDs, cert IDs, push URLs), the values file lives at `k8s/<chart>-values.yaml.tpl` and is rendered via `templatefile()` from `terraform/helm.tf`. Hardcoded UUIDs in committed `.yaml`/`.yaml.tpl` files are a code smell — they go stale silently when the underlying Terraform resource is recreated
 
 ## Code Review
 
 When reviewing PRs (automated or `@claude`-triggered):
 
-- **Flag** hardcoded secrets or credentials in `.tf`/YAML, missing `sensitive = true` on outputs, missing resource requests/limits on pods, missing health probes, Scaleway provider quirks (zone on clusters, taints via tags), changes that force resource recreation without explicit intent, label/selector mismatches, `:latest` image tags
+- **Flag** hardcoded secrets or credentials in `.tf`/YAML, missing `sensitive = true` on outputs, missing resource requests/limits on pods, missing health probes, Scaleway provider quirks (zone on clusters, taints via tags), changes that force resource recreation without explicit intent, label/selector mismatches, `:latest` image tags, `helm_release` resources with unpinned `version` or missing `repository`, hardcoded Scaleway UUIDs in `.yaml.tpl` templates that should be `${var}` references
 - **Skip** formatting (terraform fmt handles HCL), `.tfstate` contents, actual secret values in templates, pre-existing debt unrelated to the PR, cost optimization (documented in ADRs)
 - **Verify** with `terraform -chdir=terraform fmt -check` and `terraform -chdir=terraform validate` before posting findings
 - **Severity tags:** 🔴 must-fix, 🟡 nit, 🟣 pre-existing

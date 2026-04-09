@@ -1,13 +1,3 @@
-import {
-  to = helm_release.ingress_nginx
-  id = "ingress-nginx/ingress-nginx"
-}
-
-import {
-  to = helm_release.k8s_monitoring
-  id = "default/k8s-monitoring"
-}
-
 resource "helm_release" "ingress_nginx" {
   name       = "ingress-nginx"
   namespace  = "ingress-nginx"
