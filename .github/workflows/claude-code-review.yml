@@ -116,8 +116,6 @@ jobs:
             ## Output format
             - Post specific issues as inline comments on the relevant diff lines.
               Tag severity: 🔴 bug/must-fix, 🟡 nit/suggestion, 🟣 pre-existing.
-            - When posting inline comments, set `confirmed` to `false` so comments are
-              buffered and classified by severity before posting.
             - Post a single summary comment on the PR with: what the PR does well,
               overall assessment, and a count of findings by severity.
           claude_args: |
