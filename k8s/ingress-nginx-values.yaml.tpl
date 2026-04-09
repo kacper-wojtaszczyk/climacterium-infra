@@ -8,10 +8,10 @@ controller:
       memory: 256Mi
   service:
     annotations:
-      service.beta.kubernetes.io/scw-loadbalancer-id: "nl-ams-1/e5b02632-2758-4052-b335-c54b3d48e6f8"
+      service.beta.kubernetes.io/scw-loadbalancer-id: "${lb_id}"
       service.beta.kubernetes.io/scw-loadbalancer-use-hostname: "true"
       service.beta.kubernetes.io/scw-loadbalancer-protocol-http: "*"
-      service.beta.kubernetes.io/scw-loadbalancer-certificate-ids: "443:nl-ams-1/a07094f3-d4b7-49bb-a234-a49da289dcf5"
+      service.beta.kubernetes.io/scw-loadbalancer-certificate-ids: "443:${lb_cert_id}"
       service.beta.kubernetes.io/scw-loadbalancer-timeout-server: "35s"
       service.beta.kubernetes.io/scw-loadbalancer-timeout-client: "35s"
       service.beta.kubernetes.io/scw-loadbalancer-timeout-connect: "5s"

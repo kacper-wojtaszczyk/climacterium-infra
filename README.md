@@ -30,7 +30,7 @@ docs/            ADRs
 
 ## Terraform
 
-Providers: [`scaleway/scaleway`](https://registry.terraform.io/providers/scaleway/scaleway/latest) + [`vancluever/acme`](https://registry.terraform.io/providers/vancluever/acme/latest) (Let's Encrypt via DNS-01).
+Providers: [`scaleway/scaleway`](https://registry.terraform.io/providers/scaleway/scaleway/latest) + [`vancluever/acme`](https://registry.terraform.io/providers/vancluever/acme/latest) (Let's Encrypt via DNS-01) + [`hashicorp/helm`](https://registry.terraform.io/providers/hashicorp/helm/latest) (ingress-nginx, k8s-monitoring).
 
 ```bash
 cd terraform/
@@ -39,6 +39,28 @@ terraform init
 terraform plan
 terraform apply
 ```
+
+### Bootstrap order (clean apply from empty state)
+
+The Helm releases in `helm.tf` require a running cluster **and** the `cockpit-credentials` Secret to exist before they can install. The secret is provisioned out-of-band by `scripts/sync-secrets.sh` (to keep sensitive values out of Terraform state), which creates a chicken-and-egg: you must bootstrap cluster → secrets → helm releases in separate steps.
+
+```bash
+cd terraform/
+
+# 1. Cluster + node pool first (nothing in-cluster yet)
+terraform apply -target=scaleway_k8s_cluster.main -target=scaleway_k8s_pool.services
+
+# 2. Fetch kubeconfig so kubectl + sync-secrets.sh can reach the cluster
+scw k8s kubeconfig install <cluster-id>
+
+# 3. Create the cockpit-credentials Secret (referenced by the k8s-monitoring chart)
+../scripts/sync-secrets.sh
+
+# 4. Full apply — installs Helm releases and everything else
+terraform apply
+```
+
+On steady-state re-applies (no teardown), `terraform apply` alone is sufficient. This dance is only needed on a from-zero rebuild.
 
 ## Kubernetes
 
