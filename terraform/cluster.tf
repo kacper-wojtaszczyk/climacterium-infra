@@ -11,7 +11,7 @@ resource "scaleway_k8s_cluster" "main" {
     scale_down_unneeded_time   = "10m"
   }
 
-  tags = ["climacterium"]
+  tags                        = ["climacterium"]
   delete_additional_resources = false
 }
 
@@ -21,7 +21,7 @@ resource "scaleway_k8s_pool" "services" {
   node_type   = "BASIC2-A2C-8G"
   size        = 1
   min_size    = 1
-  max_size    = 3       # Headroom for autoscaler to add a node for batch jobs (see ADR 002)
+  max_size    = 3 # Headroom for autoscaler to add a node for batch jobs (see ADR 002)
   autoscaling = true
   autohealing = true
 }

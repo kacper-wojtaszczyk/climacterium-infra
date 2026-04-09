@@ -4,7 +4,7 @@ cluster:
 destinations:
   cockpit-logs:
     type: loki
-    url: ${cockpit_push_url}
+    url: "${cockpit_push_url}"
     auth:
       type: bearerToken
       bearerTokenKey: token
