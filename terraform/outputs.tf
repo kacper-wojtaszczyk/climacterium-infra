@@ -114,3 +114,15 @@ output "cockpit_token_secret_key" {
   value       = scaleway_cockpit_token.alloy.secret_key
   sensitive   = true
 }
+
+output "github_actions_access_key" {
+  description = "GitHub Actions deployment access key"
+  value       = scaleway_iam_api_key.github_actions.access_key
+  sensitive   = true
+}
+
+output "github_actions_secret_key" {
+  description = "GitHub Actions deployment secret key"
+  value       = scaleway_iam_api_key.github_actions.secret_key
+  sensitive   = true
+}
