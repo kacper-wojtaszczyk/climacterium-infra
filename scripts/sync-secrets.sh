@@ -7,22 +7,17 @@ cd "$TERRAFORM_DIR"
 
 echo "Reading Terraform outputs..."
 
-# PostgreSQL
-PG_HOST=$(terraform output -raw postgres_host)
-PG_PORT=$(terraform output -raw postgres_port)
-PG_USER=$(terraform output -raw postgres_user)
+# PostgreSQL — self-hosted in a pod, password managed via Terraform variable
 PG_PASSWORD=$(terraform output -raw postgres_password)
-PG_DSN=$(terraform output -raw postgres_connection_string)
 
 echo "→ Syncing postgres-credentials..."
 kubectl create secret generic postgres-credentials \
-  --from-literal=host="$PG_HOST" \
-  --from-literal=port="$PG_PORT" \
-  --from-literal=user="$PG_USER" \
+  --from-literal=host="postgres.default.svc.cluster.local" \
+  --from-literal=port="5432" \
+  --from-literal=user="jackfruit" \
   --from-literal=password="$PG_PASSWORD" \
   --from-literal=database="dagster" \
   --from-literal=catalog-database="jackfruit" \
-  --from-literal=dsn="$PG_DSN" \
   --save-config \
   --dry-run=client -o yaml | kubectl apply -f -
 
