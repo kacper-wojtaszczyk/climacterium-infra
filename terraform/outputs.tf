@@ -14,36 +14,8 @@ output "registry_endpoint" {
   value       = scaleway_registry_namespace.main.endpoint
 }
 
-output "postgres_host" {
-  description = "PostgreSQL private network host IP"
-  value       = scaleway_rdb_instance.postgres.private_network[0].ip
-}
-
-output "postgres_port" {
-  description = "PostgreSQL port"
-  value       = scaleway_rdb_instance.postgres.private_network[0].port
-}
-
-output "postgres_connection_string" {
-  description = "PostgreSQL connection string (contains credentials)"
-  value = format(
-    "postgresql://%s:%s@%s:%s/postgres?sslmode=require",
-    scaleway_rdb_user.admin.name,
-    var.postgres_password,
-    scaleway_rdb_instance.postgres.private_network[0].ip,
-    tostring(scaleway_rdb_instance.postgres.private_network[0].port),
-  )
-  sensitive = true
-}
-
-output "postgres_user" {
-  description = "PostgreSQL admin user name"
-  value       = scaleway_rdb_user.admin.name
-  sensitive   = true
-}
-
 output "postgres_password" {
-  description = "PostgreSQL admin password"
+  description = "Password for the in-cluster PostgreSQL StatefulSet (injected into postgres-credentials by sync-secrets.sh)"
   value       = var.postgres_password
   sensitive   = true
 }
