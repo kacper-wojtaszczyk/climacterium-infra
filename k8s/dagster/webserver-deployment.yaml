@@ -5,7 +5,10 @@ metadata:
   labels:
     app: dagster-webserver
 spec:
-  replicas: 1
+  # Scaled to zero by default (INF-12): the UI is brought up on demand — see
+  # "On-demand Dagster UI" in the repo README. The daemon handles schedules,
+  # retries, and run monitoring; it is unaffected by the webserver being down.
+  replicas: 0
   selector:
     matchLabels:
       app: dagster-webserver
