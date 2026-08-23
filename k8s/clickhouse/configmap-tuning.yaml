@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-tuning
+data:
+  z_tuning.xml: |
+    <clickhouse>
+      <!-- ClickHouse is cgroup-aware; 0.9 is also the default. Stated
+           explicitly so the server budget (0.9 x container limit) is pinned
+           config, not an inherited default. -->
+      <max_server_memory_usage_to_ram_ratio>0.9</max_server_memory_usage_to_ram_ratio>
+
+      <!-- Default is 5 GB (capped to half the container by
+           cache_size_to_ram_max_ratio). Point queries read a handful of
+           granules - 512 MiB is generous for this workload. -->
+      <mark_cache_size>536870912</mark_cache_size>
+    </clickhouse>
