@@ -15,7 +15,7 @@ output "registry_endpoint" {
 }
 
 output "postgres_password" {
-  description = "PostgreSQL admin password"
+  description = "Password for the in-cluster PostgreSQL StatefulSet (injected into postgres-credentials by sync-secrets.sh)"
   value       = var.postgres_password
   sensitive   = true
 }
