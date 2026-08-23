@@ -17,7 +17,7 @@ variable "zone" {
 
 variable "postgres_password" {
   type        = string
-  description = "Admin password for the jackfruit-postgres RDB instance"
+  description = "Password for the in-cluster PostgreSQL StatefulSet (injected into postgres-credentials by sync-secrets.sh)"
   sensitive   = true
 }
 
