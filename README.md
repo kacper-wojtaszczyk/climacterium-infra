@@ -68,6 +68,29 @@ Manifests in `k8s/`, organized by service directory. Ingress routes by hostname 
 
 Secrets are synced from Terraform outputs via `scripts/sync-secrets.sh` — no credentials in manifests or version control.
 
+## Runbook: On-demand Dagster UI
+
+The Dagster webserver (UI) is declared at `replicas: 0` (INF-12) — scheduling, run execution, retries, and run monitoring are the **daemon's** job and keep working with the UI off. Bring the UI up only when you need to inspect or launch runs interactively:
+
+```bash
+# 1. Scale the webserver up
+kubectl scale deployment/dagster-webserver --replicas=1
+kubectl rollout status deployment/dagster-webserver --timeout=120s
+
+# 2. Access it privately via port-forward (preferred — no public exposure)
+kubectl port-forward svc/dagster-webserver 3000:3000
+#    → open http://localhost:3000, Ctrl-C the port-forward when finished
+
+# 3. Scale back down when done
+kubectl scale deployment/dagster-webserver --replicas=0
+```
+
+Notes:
+
+- The basic-auth-protected `https://dagster.buttprint.eu` route also works once the pod is Ready, if you specifically need browser access without a terminal.
+- The webserver reads the same Postgres storage as the daemon, so full run history appears the moment it starts — nothing is lost by keeping it off. Cold start is a few seconds.
+- The declared state is `replicas: 0`, so a manual scale-up is temporary: the next `kubectl apply -f k8s/dagster/` returns the UI to off. That auto-revert is intended.
+
 ## Related Repos
 
 Part of the [Climacterium](https://github.com/kacper-wojtaszczyk?tab=repositories) ecosystem:

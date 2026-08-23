@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-profiles
+data:
+  z_profiles.xml: |
+    <clickhouse>
+      <profiles>
+        <default>
+          <!-- Analytics guardrail: per-query memory ceiling (~1.86 GiB).
+               Point queries peak ~10 MiB and ETL inserts ~60 MiB, so this
+               only bites a runaway analytical scan - failing it fast before
+               it pushes the server to its global budget (0.9 x 4Gi), where
+               concurrent point queries would start failing too. -->
+          <max_memory_usage>2000000000</max_memory_usage>
+
+          <!-- FINAL point-query optimisation. Safe in this schema: the dedup
+               key (variable, timestamp, lat, lon) includes timestamp and the
+               partition is toYYYYMMDD(timestamp), so all versions of a
+               logical row are always co-partitioned. NOTE: ClickHouse 26.2+
+               automates this via
+               enable_automatic_decision_for_merging_across_partitions_for_final;
+               drop this setting when the image is bumped past 26.1. -->
+          <do_not_merge_across_partitions_select_final>1</do_not_merge_across_partitions_select_final>
+
+          <!-- Container CPU limit is 1 core - more threads would just
+               oversubscribe it. -->
+          <max_threads>2</max_threads>
+        </default>
+      </profiles>
+    </clickhouse>
