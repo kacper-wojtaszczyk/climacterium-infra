@@ -8,6 +8,7 @@ This directory contains Architecture Decision Records (ADRs) documenting signifi
 |-----|-------|--------|
 | [001](001-arm64-node-instance-type.md) | ARM64 Node Instance Type (BASIC2-A2C-8G) | Accepted |
 | [002](002-single-node-pool.md) | Single Node Pool (Merge Jobs Pool into Services) | Accepted |
+| [003](003-postgres-clickhouse-colocation.md) | PostgreSQL + ClickHouse Co-located on the Base Node | Accepted |
 
 ## Format
 
