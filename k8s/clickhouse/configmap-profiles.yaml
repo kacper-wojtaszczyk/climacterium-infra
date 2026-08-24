@@ -14,14 +14,14 @@ data:
                concurrent point queries would start failing too. -->
           <max_memory_usage>2000000000</max_memory_usage>
 
-          <!-- FINAL point-query optimisation. Safe in this schema: the dedup
-               key (variable, timestamp, lat, lon) includes timestamp and the
-               partition is toYYYYMMDD(timestamp), so all versions of a
-               logical row are always co-partitioned. NOTE: ClickHouse 26.2+
-               automates this via
-               enable_automatic_decision_for_merging_across_partitions_for_final;
-               drop this setting when the image is bumped past 26.1. -->
-          <do_not_merge_across_partitions_select_final>1</do_not_merge_across_partitions_select_final>
+          <!-- FINAL point-query optimisation: skipping cross-partition merges
+               is safe in this schema (dedup key includes timestamp, partition
+               is toYYYYMMDD(timestamp), so all versions of a logical row are
+               co-partitioned). Since 26.2 ClickHouse decides this automatically
+               via enable_automatic_decision_for_merging_across_partitions_for_final
+               (default on), so the old manual
+               do_not_merge_across_partitions_select_final override was dropped
+               with the 26.2 image bump. -->
 
           <!-- Container CPU limit is 1 core - more threads would just
                oversubscribe it. -->
