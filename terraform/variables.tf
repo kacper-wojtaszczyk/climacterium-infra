@@ -27,10 +27,14 @@ variable "clickhouse_password" {
   sensitive   = true
 }
 
+
+# Retained while existing terraform.tfvars still contains the legacy ACME DNS-01 key.
+# Remove after the old ACME state is destroyed and local tfvars are cleaned up.
 variable "scw_secret_key" {
   type        = string
-  description = "Scaleway secret key — passed to ACME provider for DNS-01 challenge via Scaleway DNS"
+  description = "Legacy ACME DNS-01 key (unused after INF-09 cutover)"
   sensitive   = true
+  default     = ""
 }
 
 variable "ads_api_key" {

@@ -54,19 +54,14 @@ output "ads_api_key" {
   sensitive   = true
 }
 
-output "lb_id" {
-  value       = scaleway_lb.main.id
-  description = "Zoned ID of the Load Balancer (needed for K8s CCM annotation)"
+output "ingress_flexible_ip" {
+  value       = scaleway_instance_ip.ingress.address
+  description = "Reserved IPv4 address for nginx ingress (ports 80/443)"
 }
 
-output "lb_ip" {
-  value       = scaleway_lb_ip.main.ip_address
-  description = "Public IPv4 of the Load Balancer"
-}
-
-output "lb_certificate_id" {
-  value       = scaleway_lb_certificate.buttprint.id
-  description = "Zoned ID of the TLS certificate (needed for K8s CCM annotation)"
+output "ingress_flexible_ip_id" {
+  value       = scaleway_instance_ip.ingress.id
+  description = "Zoned ID of the reserved IPv4, for the node-attachment runbook"
 }
 
 output "dagster_webserver_password" {

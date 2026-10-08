@@ -16,12 +16,13 @@ resource "scaleway_k8s_cluster" "main" {
 }
 
 resource "scaleway_k8s_pool" "services" {
-  cluster_id  = scaleway_k8s_cluster.main.id
-  name        = "services"
-  node_type   = "BASIC2-A2C-8G"
-  size        = 1
-  min_size    = 1
-  max_size    = 3 # Headroom for autoscaler to add a node for batch jobs (see ADR 002)
-  autoscaling = true
-  autohealing = true
+  cluster_id        = scaleway_k8s_cluster.main.id
+  name              = "services"
+  node_type         = "BASIC2-A2C-8G"
+  size              = 1
+  min_size          = 1
+  max_size          = 3 # Headroom for autoscaler to add a node for batch jobs (see ADR 002)
+  autoscaling       = true
+  autohealing       = true
+  security_group_id = scaleway_instance_security_group.kapsule_ingress.id
 }

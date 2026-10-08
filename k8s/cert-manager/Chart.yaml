@@ -1,0 +1,4 @@
+apiVersion: v2
+name: buttprint-tls
+description: Let's Encrypt issuer and certificate for the public ingress hosts
+version: 0.1.0

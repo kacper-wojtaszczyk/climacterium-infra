@@ -7,6 +7,10 @@ metadata:
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - buttprint.eu
+      secretName: buttprint-tls
   rules:
     - host: buttprint.eu
       http:
@@ -32,6 +36,10 @@ metadata:
     nginx.ingress.kubernetes.io/limit-req-status-code: "429"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.buttprint.eu
+      secretName: buttprint-tls
   rules:
     - host: api.buttprint.eu
       http:
@@ -56,6 +64,10 @@ metadata:
     nginx.ingress.kubernetes.io/auth-realm: "Dagster"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - dagster.buttprint.eu
+      secretName: buttprint-tls
   rules:
     - host: dagster.buttprint.eu
       http:
